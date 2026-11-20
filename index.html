@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pamoja Fan Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: single column. The fan form is a match ticket with a tear-off stub that previews what gets saved;
+   the organizer view is scan-first: totals, then breakdowns, then a searchable register. */
+:root{
+  --bg:#F1F4F0; --surface:#FFFFFF; --sunk:#E7ECE8; --ink:#13201A; --muted:#55665D; --line:#D2DBD5;
+  --accent:#0B6B4F; --accent-ink:#FFFFFF; --accent-soft:#DCEEE6;
+  --gold:#9A6B00; --gold-soft:#FBF0CF; --stub-gold:#F4C430;
+  --danger:#B42318; --danger-soft:#FCE6E3; --shadow:0 1px 2px rgb(19 32 26 / .06),0 8px 24px rgb(19 32 26 / .07);
+  --f-display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1411; --surface:#15201B; --sunk:#1B2822; --ink:#E5EEE9; --muted:#93A59B; --line:#2B3A33;
+  --accent:#3DBE8C; --accent-ink:#04120C; --accent-soft:#173A2D;
+  --gold:#F2C744; --gold-soft:#3A3014; --stub-gold:#F2C744;
+  --danger:#F7806F; --danger-soft:#3D1D19; --shadow:0 1px 2px rgb(0 0 0 / .4),0 8px 24px rgb(0 0 0 / .35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1411; --surface:#15201B; --sunk:#1B2822; --ink:#E5EEE9; --muted:#93A59B; --line:#2B3A33;
+  --accent:#3DBE8C; --accent-ink:#04120C; --accent-soft:#173A2D;
+  --gold:#F2C744; --gold-soft:#3A3014; --stub-gold:#F2C744;
+  --danger:#F7806F; --danger-soft:#3D1D19; --shadow:0 1px 2px rgb(0 0 0 / .4),0 8px 24px rgb(0 0 0 / .35); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+h1,h2,h3{font-family:var(--f-display);font-stretch:82%;line-height:1.05;margin:0;text-wrap:balance}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--stub-gold);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* Header */
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.brand{display:flex;flex-direction:column;gap:6px;min-width:0}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.brand h1{font-size:clamp(30px,6vw,44px);font-weight:800}
+.hosts{display:flex;gap:6px;flex-wrap:wrap}
+.host{font-family:var(--f-mono);font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+nav.tabs{display:flex;gap:4px;background:var(--sunk);padding:4px;border-radius:12px}
+nav.tabs a{padding:8px 14px;border-radius:9px;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px}
+nav.tabs a[aria-current="page"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+
+/* Ticket */
+.ticket{display:grid;grid-template-columns:minmax(0,1fr) 15rem;background:var(--surface);border-radius:16px;box-shadow:var(--shadow);position:relative}
+.ticket-main{padding:28px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.ticket-main header{display:flex;flex-direction:column;gap:6px}
+.ticket-main h2{font-size:28px;font-weight:750}
+.lede{color:var(--muted);max-width:60ch;margin:0}
+.stub{position:relative;background:var(--accent);color:var(--accent-ink);border-radius:0 16px 16px 0;padding:28px 22px;display:flex;flex-direction:column;gap:16px;border-left:2px dashed color-mix(in srgb,var(--accent-ink) 45%,transparent)}
+.stub::before,.stub::after{content:"";position:absolute;left:-13px;width:24px;height:24px;border-radius:50%;background:var(--bg)}
+.stub::before{top:-12px}.stub::after{bottom:-12px}
+.stub .admit{font-family:var(--f-display);font-stretch:70%;font-weight:800;font-size:26px;letter-spacing:.04em;line-height:1}
+.stub .admit span{color:var(--stub-gold)}
+.stub dl{margin:0;display:flex;flex-direction:column;gap:12px}
+.stub dt{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.75}
+.stub dd{margin:2px 0 0;font-family:var(--f-mono);font-weight:600;font-size:15px;word-break:break-all}
+.stub dd.empty{opacity:.5}
+.stub .barcode{margin-top:auto;height:38px;background:repeating-linear-gradient(90deg,currentColor 0 2px,transparent 2px 4px,currentColor 4px 5px,transparent 5px 9px,currentColor 9px 12px,transparent 12px 14px);opacity:.55;border-radius:2px}
+
+/* Form */
+form{display:flex;flex-direction:column;gap:18px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field.full{grid-column:1/-1}
+label,.label{font-weight:600;font-size:14px}
+.hint{font-size:13px;color:var(--muted)}
+input[type=text],input[type=tel],input[type=date],input[type=search],select{width:100%;min-height:46px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface)}
+input:focus,select:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+input.code{font-family:var(--f-mono);text-transform:uppercase;letter-spacing:.06em}
+input.code::placeholder{text-transform:none;letter-spacing:0}
+.phone{display:grid;grid-template-columns:minmax(0,11rem) minmax(0,1fr);gap:8px}
+.phone .other{grid-column:1/-1}
+.err{color:var(--danger);font-size:13px;font-weight:500;min-height:0}
+.field.bad input,.field.bad select{border-color:var(--danger)}
+.consent{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:var(--sunk)}
+.consent input{width:20px;height:20px;margin-top:2px;accent-color:var(--accent);flex:none}
+.consent p{margin:4px 0 0;font-size:13px;color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{min-height:46px;padding:10px 20px;border-radius:10px;border:1.5px solid transparent;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;border-color:var(--line)}
+.btn.ghost:hover{background:var(--sunk)}
+.btn.sm{min-height:34px;padding:5px 12px;font-size:13px;border-radius:8px}
+.btn.danger{color:var(--danger);border-color:var(--danger-soft)}
+.btn.danger.armed{background:var(--danger);color:var(--surface);border-color:var(--danger)}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.status{font-size:14px;padding:10px 14px;border-radius:10px}
+.status.error{background:var(--danger-soft);color:var(--danger)}
+.status.info{background:var(--gold-soft);color:var(--gold)}
+.status.ok{background:var(--accent-soft);color:var(--accent)}
+.done{display:flex;flex-direction:column;gap:14px;align-items:flex-start}
+.done h3{font-size:24px}
+.done .big{font-family:var(--f-mono);font-size:22px;font-weight:600;letter-spacing:.06em}
+
+/* Fan's own tickets */
+.mine{display:flex;flex-direction:column;gap:10px}
+.mine h3{font-size:18px}
+.mine ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.mine li{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.mine li > div{min-width:0}
+
+/* Organizer */
+.org{display:flex;flex-direction:column;gap:20px}
+.org-head{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:flex-end}
+.org-head h2{font-size:28px;font-weight:750}
+.banner{padding:12px 14px;border-radius:10px;background:var(--gold-soft);color:var(--gold);font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.stat{background:var(--surface);border-radius:12px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px}
+.stat .k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.stat .v{font-family:var(--f-display);font-stretch:80%;font-weight:800;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.breakdowns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.panel{background:var(--surface);border-radius:12px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel h3{font-size:17px}
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) 3rem;gap:4px 10px;font-size:13px}
+.bar .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .n{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.bar .track{grid-column:1/-1;height:6px;background:var(--sunk);border-radius:3px;overflow:hidden}
+.bar .fill{height:100%;background:var(--accent);border-radius:3px}
+.empty-note{color:var(--muted);font-size:14px;margin:0}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.tools input[type=search]{flex:1 1 16rem;min-width:0}
+.tools select{flex:0 1 16rem;min-width:0}
+.table-wrap{overflow-x:auto;background:var(--surface);border-radius:12px;box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
+th{text-align:left;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:12px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.code{font-family:var(--f-mono);font-weight:600;letter-spacing:.04em;white-space:nowrap}
+td.ph{font-family:var(--f-mono);white-space:nowrap}
+td.when{color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.row-actions{display:flex;gap:6px;justify-content:flex-end}
+.chip{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:var(--gold-soft);color:var(--gold);margin-left:6px;vertical-align:middle}
+.count-line{font-size:13px;color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+footer{color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--line);padding-top:16px}
+footer p{margin:0;max-width:75ch}
+
+@media (max-width:760px){
+  .ticket{grid-template-columns:1fr}
+  .stub{order:-1;border-radius:16px 16px 0 0;border-left:0;border-bottom:2px dashed color-mix(in srgb,var(--accent-ink) 45%,transparent);padding:20px}
+  .stub::before,.stub::after{top:auto;bottom:-13px}
+  .stub::before{left:-12px}.stub::after{left:auto;right:-12px}
+  .stub dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .stub .barcode{display:none}
+  .ticket-main{padding:22px 18px}
+  .grid,.breakdowns{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:420px){.phone{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:no-preference){.btn,.bar .fill{transition:filter .15s,background-color .15s,width .4s ease}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <span class="eyebrow">AFCON 2027 fan safety</span>
+      <h1>Pamoja Fan Register</h1>
+      <div class="hosts" aria-label="Host nations"><span class="host">KE</span><span class="host">TZ</span><span class="host">UG</span></div>
+    </div>
+    <nav class="tabs" aria-label="Views">
+      <a href="#register" id="tab-register" aria-current="page">Register</a>
+      <a href="#organizers" id="tab-organizers" hidden>Organizers</a>
+    </nav>
+  </header>
+
+  <!-- FAN VIEW -->
+  <section id="view-register" class="org" aria-labelledby="reg-title">
+    <div class="ticket">
+      <div class="ticket-main">
+        <div id="form-area">
+          <form id="reg-form" novalidate>
+            <header>
+              <h2 id="reg-title">Register your ticket</h2>
+              <p class="lede">If something happens at the stadium, match organizers can reach you quickly. It takes under a minute.</p>
+            </header>
+            <div class="grid">
+              <div class="field full" data-f="venue">
+                <label for="f-venue">Stadium</label>
+                <select id="f-venue" required></select>
+                <span class="err" id="e-venue"></span>
+              </div>
+              <div class="field" data-f="date">
+                <label for="f-date">Match date</label>
+                <input type="date" id="f-date" required>
+                <span class="err" id="e-date"></span>
+              </div>
+              <div class="field" data-f="nation">
+                <label for="f-nation">Your country</label>
+                <select id="f-nation" required></select>
+                <span class="err" id="e-nation"></span>
+              </div>
+              <div class="field full" data-f="ticket">
+                <label for="f-ticket">Ticket code</label>
+                <input type="text" id="f-ticket" class="code" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. KE27-4F9A2C" maxlength="24" required>
+                <span class="hint">Printed on your ticket or in your ticket app. Letters, numbers and dashes.</span>
+                <span class="err" id="e-ticket"></span>
+              </div>
+              <div class="field full" data-f="phone">
+                <span class="label" id="l-phone">Phone number</span>
+                <div class="phone" role="group" aria-labelledby="l-phone">
+                  <select id="f-dial" aria-label="Country code"></select>
+                  <input type="tel" id="f-phone" inputmode="tel" autocomplete="tel-national" placeholder="700 123 456" aria-label="Phone number">
+                  <input type="text" id="f-dial-other" class="other mono" inputmode="numeric" placeholder="Country code, e.g. 61" aria-label="Other country code" hidden>
+                </div>
+                <span class="hint">The number you'll carry at the match. Visiting fans can use a home number.</span>
+                <span class="err" id="e-phone"></span>
+              </div>
+            </div>
+            <div class="field" data-f="consent">
+              <label class="consent" for="f-consent">
+                <input type="checkbox" id="f-consent">
+                <span><strong>I agree that match organizers can contact me about my safety at this match.</strong>
+                  <p>Only organizers can see your number. It is used for safety and match-day contact only, never for marketing, and is deleted 30 days after the tournament ends. Handled under Kenya's Data Protection Act 2019, Tanzania's Personal Data Protection Act 2022 and Uganda's Data Protection and Privacy Act 2019.</p></span>
+              </label>
+              <span class="err" id="e-consent"></span>
+            </div>
+            <div id="form-status" class="status" role="status" aria-live="polite" hidden></div>
+            <div class="actions">
+              <button class="btn primary" id="submit" type="submit">Register my ticket</button>
+            </div>
+          </form>
+          <div id="done" class="done" hidden>
+            <span class="eyebrow">Registered</span>
+            <h3>You're on the register</h3>
+            <div class="big" id="done-code"></div>
+            <p class="lede" id="done-detail"></p>
+            <button class="btn ghost" id="again" type="button">Register another ticket</button>
+          </div>
+        </div>
+      </div>
+      <aside class="stub" aria-label="Preview of what will be saved">
+        <div class="admit">ADMIT <span>ONE</span></div>
+        <dl>
+          <div><dt>Ticket</dt><dd id="s-ticket" class="empty">——————</dd></div>
+          <div><dt>Contact</dt><dd id="s-phone" class="empty">+———</dd></div>
+          <div><dt>Stadium</dt><dd id="s-venue" class="empty">Not chosen</dd></div>
+          <div><dt>Date</dt><dd id="s-date" class="empty">——</dd></div>
+        </dl>
+        <div class="barcode" aria-hidden="true"></div>
+      </aside>
+    </div>
+
+    <div class="mine" id="mine" hidden>
+      <h3>Your registered tickets</h3>
+      <ul id="mine-list"></ul>
+    </div>
+  </section>
+
+  <!-- ORGANIZER VIEW -->
+  <section id="view-organizers" class="org" hidden aria-labelledby="org-title">
+    <div class="org-head">
+      <div>
+        <span class="eyebrow">Organizers only</span>
+        <h2 id="org-title">Fan register</h2>
+      </div>
+      <button class="btn ghost" id="export" type="button">Export CSV</button>
+    </div>
+    <div id="org-banner" class="banner" hidden></div>
+    <div class="stats">
+      <div class="stat"><span class="k">Registered</span><span class="v" id="st-total">0</span></div>
+      <div class="stat"><span class="k">Today</span><span class="v" id="st-today">0</span></div>
+      <div class="stat"><span class="k">Countries</span><span class="v" id="st-nations">0</span></div>
+      <div class="stat"><span class="k">Stadiums</span><span class="v" id="st-venues">0</span></div>
+    </div>
+    <div class="breakdowns">
+      <div class="panel"><h3>By stadium</h3><div class="bars" id="by-venue"></div></div>
+      <div class="panel"><h3>By fan country</h3><div class="bars" id="by-nation"></div></div>
+    </div>
+    <div class="panel">
+      <h3>Find a fan</h3>
+      <div class="tools">
+        <input type="search" id="q" placeholder="Search ticket code or last digits of phone" aria-label="Search ticket code or phone">
+        <select id="fv" aria-label="Filter by stadium"></select>
+      </div>
+      <div class="count-line" id="count-line"></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ticket</th><th>Stadium</th><th>Date</th><th>Country</th><th>Phone</th><th>Registered</th><th><span class="sr">Actions</span></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div id="org-status" class="status" role="status" aria-live="polite" hidden></div>
+  </section>
+
+  <footer>
+    <p><strong>Demo version.</strong> Registrations are saved only in this browser, so you can try both tabs without signing in. Nothing is sent anywhere.</p>
+    <p><strong>Independent prototype.</strong> Not an official CAF or AFCON 2027 tool. The stadium list and ticket code format are placeholders until the organizers confirm them.</p>
+  </footer>
+</div>
+
+<script>
+(() => {
+  // ---------- Reference data ----------
+  const HOSTS = [["Kenya","254"],["Tanzania","255"],["Uganda","256"]];
+  const AFRICA = [["Algeria","213"],["Angola","244"],["Benin","229"],["Botswana","267"],["Burkina Faso","226"],["Burundi","257"],["Cabo Verde","238"],["Cameroon","237"],["Central African Republic","236"],["Chad","235"],["Comoros","269"],["Congo","242"],["Côte d'Ivoire","225"],["DR Congo","243"],["Djibouti","253"],["Egypt","20"],["Equatorial Guinea","240"],["Eritrea","291"],["Eswatini","268"],["Ethiopia","251"],["Gabon","241"],["Gambia","220"],["Ghana","233"],["Guinea","224"],["Guinea-Bissau","245"],["Lesotho","266"],["Liberia","231"],["Libya","218"],["Madagascar","261"],["Malawi","265"],["Mali","223"],["Mauritania","222"],["Mauritius","230"],["Morocco","212"],["Mozambique","258"],["Namibia","264"],["Niger","227"],["Nigeria","234"],["Rwanda","250"],["São Tomé and Príncipe","239"],["Senegal","221"],["Seychelles","248"],["Sierra Leone","232"],["Somalia","252"],["South Africa","27"],["South Sudan","211"],["Sudan","249"],["Togo","228"],["Tunisia","216"],["Zambia","260"],["Zimbabwe","263"]];
+  const ABROAD = [["United Kingdom","44"],["United States / Canada","1"],["France","33"],["Germany","49"],["Netherlands","31"],["Belgium","32"],["Spain","34"],["Portugal","351"],["Italy","39"],["United Arab Emirates","971"],["Saudi Arabia","966"],["Qatar","974"],["India","91"],["China","86"]];
+  const DIAL = Object.fromEntries([...HOSTS, ...AFRICA]);
+  const VENUES = [
+    ["Kenya", ["Moi International Sports Centre, Kasarani · Nairobi", "Nyayo National Stadium · Nairobi"]],
+    ["Tanzania", ["Benjamin Mkapa Stadium · Dar es Salaam"]],
+    ["Uganda", ["Mandela National Stadium, Namboole · Kampala"]],
+  ];
+  const HOST_OF = {}; VENUES.forEach(([c, vs]) => vs.forEach(v => HOST_OF[v] = c));
+  HOST_OF["Other venue"] = "";
+  const SAMPLE = [
+    {ticket:"SAMPLE-UG0141", venue:VENUES[2][1][0], date:"2027-06-20", nation:"Uganda", e164:"+256700000101", at:Date.now()-3.6e6},
+    {ticket:"SAMPLE-KE2290", venue:VENUES[0][1][0], date:"2027-06-19", nation:"Nigeria", e164:"+234800000202", at:Date.now()-7.2e6},
+    {ticket:"SAMPLE-TZ0387", venue:VENUES[1][1][0], date:"2027-06-21", nation:"Tanzania", e164:"+255700000303", at:Date.now()-9e6},
+    {ticket:"SAMPLE-KE5512", venue:VENUES[0][1][0], date:"2027-06-19", nation:"Kenya", e164:"+254700000404", at:Date.now()-1.1e7},
+    {ticket:"SAMPLE-UG0078", venue:VENUES[2][1][0], date:"2027-06-20", nation:"Senegal", e164:"+221700000505", at:Date.now()-1.5e7},
+  ].map(r => ({...r, dial: r.e164.slice(1, 4), host: HOST_OF[r.venue], sample:true}));
+
+  // ---------- Helpers ----------
+  const $ = id => document.getElementById(id);
+  function el(tag, props = {}, ...kids) {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else if (v === true) n.setAttribute(k, "");
+      else if (v !== false && v != null) n.setAttribute(k, v);
+    }
+    for (const c of kids.flat()) if (c != null && c !== false) n.append(c instanceof Node ? c : document.createTextNode(String(c)));
+    return n;
+  }
+  const opt = (value, label, extra = {}) => el("option", {value, ...extra}, label);
+  const normTicket = s => (s || "").toUpperCase().replace(/[\s_]+/g, "").replace(/[^A-Z0-9-]/g, "");
+  const digits = s => (s || "").replace(/\D+/g, "");
+  const mask = (e164, dial) => { const d = digits(e164); if (d.length < 6) return e164; const cc = dial || d.slice(0, 3); return "+" + cc + " ••• ••• " + d.slice(-3); };
+  const fmtE164 = e164 => { const d = digits(e164); return "+" + d; };
+  const fmtDate = s => { if (!s) return "—"; const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d).toLocaleDateString(undefined, {day:"numeric", month:"short", year:"numeric"}); };
+  const fmtWhen = t => new Date(t).toLocaleString(undefined, {day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"});
+  const shortVenue = v => (v || "").split(" · ")[0];
+  function setStatus(node, kind, msg) { if (!msg) { node.hidden = true; node.textContent = ""; return; } node.className = "status " + kind; node.textContent = msg; node.hidden = false; }
+  function errMsg(e) {
+    const c = e && e.code;
+    if (c === "duplicate") return e.mine ? "You've already registered this ticket." : "This ticket code is already registered. Check the code, or ask a steward if you think it's a mistake.";
+    if (c === "busy") return "Someone is registering this ticket right now. Wait a few seconds and try again.";
+    if (c === "invalid_argument") return "Your account can't save to this register. Ask the organizer to give you Contributor access.";
+    if (c === "quota_exceeded") return "The register is full. Tell an organizer.";
+    if (c === "revoked") return "Your access to this register has changed. Reload the page.";
+    return "Couldn't reach the register. Check your connection and try again.";
+  }
+  // Two-step confirm without dialogs
+  function armButton(btn, label, action) {
+    let t;
+    btn.addEventListener("click", async () => {
+      if (!btn.classList.contains("armed")) { btn.classList.add("armed"); btn.textContent = "Confirm"; clearTimeout(t); t = setTimeout(() => { btn.classList.remove("armed"); btn.textContent = label; }, 4000); return; }
+      clearTimeout(t); btn.disabled = true; btn.textContent = "Removing…";
+      try { await action(); } catch (e) { btn.disabled = false; btn.classList.remove("armed"); btn.textContent = label; throw e; }
+    });
+  }
+
+  // ---------- Build selects ----------
+  const fVenue = $("f-venue"), fDate = $("f-date"), fNation = $("f-nation"), fTicket = $("f-ticket"), fDial = $("f-dial"), fPhone = $("f-phone"), fDialOther = $("f-dial-other"), fConsent = $("f-consent");
+  fVenue.append(opt("", "Choose the stadium", {disabled:true, selected:true}));
+  VENUES.forEach(([c, vs]) => fVenue.append(el("optgroup", {label:c}, vs.map(v => opt(v, shortVenue(v) + " — " + v.split(" · ")[1])))));
+  fVenue.append(opt("Other venue", "Other venue"));
+
+  fNation.append(opt("", "Choose your country", {disabled:true, selected:true}));
+  fNation.append(el("optgroup", {label:"Host nations"}, HOSTS.map(([n]) => opt(n, n))));
+  fNation.append(el("optgroup", {label:"Africa"}, AFRICA.map(([n]) => opt(n, n))));
+  fNation.append(opt("Outside Africa", "Outside Africa"));
+
+  fDial.append(el("optgroup", {label:"Host nations"}, HOSTS.map(([n, d]) => opt(d + "|" + n, "+" + d + " " + n))));
+  fDial.append(el("optgroup", {label:"Africa"}, AFRICA.map(([n, d]) => opt(d + "|" + n, "+" + d + " " + n))));
+  fDial.append(el("optgroup", {label:"Outside Africa"}, ABROAD.map(([n, d]) => opt(d + "|" + n, "+" + d + " " + n))));
+  fDial.append(opt("other", "Other code…"));
+  fDial.value = "256|Uganda";
+  let dialTouched = false;
+
+  // ---------- Live stub preview ----------
+  const dialCode = () => fDial.value === "other" ? digits(fDialOther.value) : fDial.value.split("|")[0];
+  const national = () => digits(fPhone.value).replace(/^0+/, "");
+  function preview() {
+    const t = normTicket(fTicket.value), d = dialCode(), n = national();
+    const set = (id, v, fallback) => { const x = $(id); x.textContent = v || fallback; x.classList.toggle("empty", !v); };
+    set("s-ticket", t, "——————");
+    set("s-phone", n ? "+" + d + " " + n.replace(/(\d{3})(?=\d)/g, "$1 ") : "", "+" + (d || "———"));
+    set("s-venue", fVenue.value ? shortVenue(fVenue.value) : "", "Not chosen");
+    set("s-date", fDate.value ? fmtDate(fDate.value) : "", "——");
+  }
+  fTicket.addEventListener("input", () => { const p = fTicket.selectionStart, before = fTicket.value; fTicket.value = before.toUpperCase(); try { fTicket.setSelectionRange(p, p); } catch {} preview(); });
+  [fPhone, fDialOther, fDate].forEach(x => x.addEventListener("input", preview));
+  fVenue.addEventListener("change", preview);
+  fDial.addEventListener("change", () => { dialTouched = true; fDialOther.hidden = fDial.value !== "other"; if (!fDialOther.hidden) fDialOther.focus(); preview(); });
+  fNation.addEventListener("change", () => { const d = DIAL[fNation.value]; if (d && !dialTouched) { fDial.value = d + "|" + fNation.value; fDialOther.hidden = true; preview(); } });
+
+  // ---------- Validation ----------
+  function fieldErr(name, msg) { const f = document.querySelector(`.field[data-f="${name}"]`); f.classList.toggle("bad", !!msg); $("e-" + name).textContent = msg || ""; }
+  function validate() {
+    let ok = true; const bad = (n, m) => { fieldErr(n, m); if (m && ok) { ok = false; (n === "phone" ? fPhone : n === "consent" ? fConsent : $("f-" + n)).focus(); } };
+    ["venue","date","nation","ticket","phone","consent"].forEach(n => fieldErr(n, ""));
+    if (!fVenue.value) bad("venue", "Choose the stadium for your match.");
+    if (!fDate.value) bad("date", "Choose the match date.");
+    if (!fNation.value) bad("nation", "Choose your country.");
+    const t = normTicket(fTicket.value);
+    if (!t) bad("ticket", "Enter the code on your ticket.");
+    else if (t.length < 6 || t.length > 20) bad("ticket", "Ticket codes are 6 to 20 letters and numbers. Check the code on your ticket.");
+    const d = dialCode(), n = national();
+    if (!d || d.length > 3) bad("phone", "Choose your country code.");
+    else if (n.length < 6 || n.length > 12 || (d + n).length > 15) bad("phone", "That number doesn't look complete. Enter it without the country code, e.g. 700 123 456.");
+    if (!fConsent.checked) bad("consent", "Tick the box so organizers are allowed to contact you.");
+    if (!ok) return null;
+    return { ticket:t, venue:fVenue.value, host:HOST_OF[fVenue.value] ?? "", date:fDate.value, nation:fNation.value, dial:d, phone:n, e164:"+" + d + n, consent:true, at:Date.now() };
+  }
+
+  // ---------- Runtime ----------
+  let DB = null, UID = null, CAN_EDIT = false, DOWNLOADS = null;
+  const PREVIEW = false;
+  const formStatus = $("form-status"), orgStatus = $("org-status");
+
+  async function register(v) {
+    const tref = DB.doc("tickets/" + v.ticket);
+    const lease = await tref.acquire({holder: UID, ttlMs: 6000});
+    if (!lease.acquired) throw {code:"busy"};
+    const snap = await tref.get();
+    const owner = snap.exists ? snap.data().by : null;
+    if (owner) throw {code:"duplicate", mine: owner === UID};
+    await tref.set({by: UID, venue: v.venue, date: v.date, at: v.at});
+    const mref = DB.doc("regs/" + UID);
+    try {
+      const cur = await mref.get();
+      const entries = cur.exists && Array.isArray(cur.data().entries) ? cur.data().entries.slice() : [];
+      entries.push(v);
+      await mref.set({entries, updatedAt: v.at});
+    } catch (e) { await tref.delete().catch(() => {}); throw e; }
+  }
+  async function removeEntry(ownerUid, ticket) {
+    const mref = DB.doc("regs/" + ownerUid);
+    const cur = await mref.get();
+    if (cur.exists) {
+      const entries = (cur.data().entries || []).filter(x => x.ticket !== ticket);
+      await mref.set({entries, updatedAt: Date.now()});
+    }
+    const tref = DB.doc("tickets/" + ticket);
+    const t = await tref.get();
+    if (t.exists && t.data().by === ownerUid) await tref.delete();
+  }
+
+  $("reg-form").addEventListener("submit", async e => {
+    e.preventDefault();
+    setStatus(formStatus, "", "");
+    const v = validate(); if (!v) return;
+    if (!DB || !UID) { setStatus(formStatus, "info", PREVIEW ? "Everything checks out. Saving works once this page is published and opened while signed in to Claude." : "Sign in to Claude to save your registration."); return; }
+    const btn = $("submit"); btn.disabled = true; btn.textContent = "Saving…";
+    try {
+      await register(v);
+      $("done-code").textContent = v.ticket;
+      $("done-detail").textContent = `${shortVenue(v.venue)}, ${fmtDate(v.date)}. We'll call or text ${mask(v.e164, v.dial)} only if something happens.`;
+      $("reg-form").hidden = true; $("done").hidden = false; $("again").focus();
+    } catch (err) { setStatus(formStatus, "error", errMsg(err)); }
+    finally { btn.disabled = false; btn.textContent = "Register my ticket"; }
+  });
+  $("again").addEventListener("click", () => {
+    fTicket.value = ""; fConsent.checked = false; preview();
+    $("done").hidden = true; $("reg-form").hidden = false; fTicket.focus();
+  });
+
+  // Fan's own tickets
+  function renderMine(entries) {
+    const box = $("mine"), list = $("mine-list"); list.replaceChildren();
+    box.hidden = !entries.length;
+    entries.slice().sort((a, b) => b.at - a.at).forEach(x => {
+      const rm = el("button", {class:"btn sm ghost danger", type:"button"}, "Remove");
+      armButton(rm, "Remove", async () => { try { await removeEntry(UID, x.ticket); } catch (e) { setStatus(formStatus, "error", errMsg(e)); throw e; } });
+      list.append(el("li", {}, el("div", {}, el("div", {class:"mono", style:"font-weight:600"}, x.ticket), el("div", {class:"hint"}, `${shortVenue(x.venue)} · ${fmtDate(x.date)} · ${mask(x.e164, x.dial)}`)), rm));
+    });
+  }
+
+  // ---------- Organizer view ----------
+  let ALL = [], LIVE = false; const revealed = new Set();
+  const fv = $("fv"), q = $("q");
+  fv.append(opt("", "All stadiums")); VENUES.forEach(([c, vs]) => fv.append(el("optgroup", {label:c}, vs.map(v => opt(v, shortVenue(v)))))); fv.append(opt("Other venue", "Other venue"));
+  q.addEventListener("input", renderTable); fv.addEventListener("change", renderTable);
+
+  function bars(node, counts) {
+    node.replaceChildren();
+    const items = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    if (!items.length) { node.append(el("p", {class:"empty-note"}, "Nothing yet.")); return; }
+    const max = items[0][1];
+    items.forEach(([k, n]) => node.append(el("div", {class:"bar"}, el("span", {class:"name", title:k}, k), el("span", {class:"n"}, n), el("div", {class:"track"}, el("div", {class:"fill", style:`width:${Math.max(4, n / max * 100)}%`})))));
+  }
+  function rowsForView() { return ALL.length ? ALL : SAMPLE; }
+  function renderOrg() {
+    const rows = rowsForView(), sample = !ALL.length;
+    const banner = $("org-banner");
+    banner.hidden = !sample;
+    banner.textContent = sample ? "Showing sample rows, not real fans. They disappear as soon as the first fan registers." : "";
+    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+    const byV = {}, byN = {};
+    rows.forEach(r => { byV[shortVenue(r.venue)] = (byV[shortVenue(r.venue)] || 0) + 1; byN[r.nation] = (byN[r.nation] || 0) + 1; });
+    $("st-total").textContent = rows.length;
+    $("st-today").textContent = rows.filter(r => r.at >= startOfDay.getTime()).length;
+    $("st-nations").textContent = Object.keys(byN).length;
+    $("st-venues").textContent = Object.keys(byV).length;
+    bars($("by-venue"), byV); bars($("by-nation"), byN);
+    $("export").disabled = sample;
+    renderTable();
+  }
+  function renderTable() {
+    const rows = rowsForView();
+    const term = q.value.trim().toUpperCase(), td = digits(q.value), venue = fv.value;
+    const shown = rows.filter(r => (!venue || r.venue === venue) && (!term || r.ticket.includes(normTicket(term)) || (td.length >= 3 && digits(r.e164).endsWith(td)))).sort((a, b) => b.at - a.at);
+    $("count-line").textContent = `${shown.length} of ${rows.length} ${rows.length === 1 ? "fan" : "fans"}`;
+    const body = $("rows"); body.replaceChildren();
+    if (!shown.length) { body.append(el("tr", {}, el("td", {colspan:"7", class:"empty-note"}, rows.length ? "No fans match that search." : "No fans have registered yet."))); return; }
+    shown.forEach(r => {
+      const key = (r.owner || "s") + "/" + r.ticket, open = revealed.has(key);
+      const reveal = el("button", {class:"btn sm ghost", type:"button", "aria-label": (open ? "Hide" : "Show") + " phone for " + r.ticket}, open ? "Hide" : "Show");
+      reveal.addEventListener("click", () => { open ? revealed.delete(key) : revealed.add(key); renderTable(); });
+      const actions = [reveal];
+      if (open) {
+        const copy = el("button", {class:"btn sm ghost", type:"button"}, "Copy");
+        copy.addEventListener("click", async () => { try { await navigator.clipboard.writeText(fmtE164(r.e164)); copy.textContent = "Copied"; } catch { copy.textContent = "Select it"; } setTimeout(() => copy.textContent = "Copy", 1500); });
+        actions.push(copy);
+      }
+      if (!r.sample && CAN_EDIT) {
+        const rm = el("button", {class:"btn sm ghost danger", type:"button"}, "Remove");
+        armButton(rm, "Remove", async () => { try { await removeEntry(r.owner, r.ticket); setStatus(orgStatus, "ok", `Removed ${r.ticket}.`); } catch (e) { setStatus(orgStatus, "error", errMsg(e)); throw e; } });
+        actions.push(rm);
+      }
+      body.append(el("tr", {},
+        el("td", {class:"code"}, r.ticket, r.sample ? el("span", {class:"chip"}, "Sample") : null),
+        el("td", {}, shortVenue(r.venue)),
+        el("td", {class:"when"}, fmtDate(r.date)),
+        el("td", {}, r.nation),
+        el("td", {class:"ph"}, open ? fmtE164(r.e164) : mask(r.e164, r.dial)),
+        el("td", {class:"when"}, fmtWhen(r.at)),
+        el("td", {}, el("div", {class:"row-actions"}, actions))));
+    });
+  }
+  $("export").addEventListener("click", async () => {
+    if (!ALL.length) return;
+    const esc = s => { s = String(s ?? ""); return /[",\n]/.test(s) || /^[=+\-@]/.test(s) ? '"' + s.replace(/"/g, '""').replace(/^([=+\-@])/, "'$1") + '"' : s; };
+    const head = ["ticket_code","stadium","host_country","match_date","fan_country","phone_e164","consent","registered_at_utc"];
+    const lines = [head.join(",")].concat(ALL.map(r => [r.ticket, r.venue, r.host, r.date, r.nation, r.e164, r.consent ? "yes" : "no", new Date(r.at).toISOString()].map(esc).join(",")));
+    if (!DOWNLOADS) { setStatus(orgStatus, "error", "Export isn't available in this view. Open the page in claude.ai."); return; }
+    try { await DOWNLOADS.save({filename:`pamoja-fan-register-${new Date().toISOString().slice(0,10)}.csv`, data: lines.join("\r\n")}); setStatus(orgStatus, "ok", `Exported ${ALL.length} fans.`); }
+    catch (e) { if (e && e.code !== "declined") setStatus(orgStatus, "error", "Export didn't finish. Try again in a moment."); }
+  });
+
+  // ---------- Routing ----------
+  let VIEW = location.hash === "#organizers" ? "organizers" : "register";
+  ["register", "organizers"].forEach(n => $("tab-" + n).addEventListener("click", () => { VIEW = n; route(); }));
+  function route() {
+    const org = VIEW === "organizers" && !$("tab-organizers").hidden;
+    $("view-register").hidden = org; $("view-organizers").hidden = !org;
+    $("tab-register").toggleAttribute("aria-current", !org); if (!org) $("tab-register").setAttribute("aria-current", "page");
+    $("tab-organizers").toggleAttribute("aria-current", org); if (org) $("tab-organizers").setAttribute("aria-current", "page");
+  }
+  window.addEventListener("hashchange", () => { VIEW = location.hash === "#organizers" ? "organizers" : "register"; route(); });
+
+  // ---------- Boot ----------
+  preview(); renderOrg(); route();
+  // Demo storage: everything is kept in this browser only (localStorage), so no server or sign-in is needed.
+  function localDB() {
+    const KEY = "pamoja-demo-db", subs = new Set();
+    let mem = {}; try { mem = JSON.parse(localStorage.getItem(KEY)) || {}; } catch {}
+    const save = () => { try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch {} subs.forEach(f => f()); };
+    const snap = p => ({ id: p.split("/").pop(), exists: p in mem, data: () => mem[p], metadata: { fromCache: false, hasPendingWrites: false } });
+    const watch = f => { subs.add(f); f(); return () => subs.delete(f); };
+    return {
+      doc: p => ({
+        get: async () => snap(p),
+        set: async d => { mem[p] = JSON.parse(JSON.stringify(d)); save(); },
+        delete: async () => { delete mem[p]; save(); },
+        acquire: async () => ({ acquired: true }),
+        onSnapshot: next => watch(() => next(snap(p))),
+      }),
+      collection: c => ({
+        onSnapshot: next => watch(() => {
+          const docs = Object.keys(mem).filter(p => p.startsWith(c + "/") && p.split("/").length === 2).map(snap);
+          next({ docs, size: docs.length, empty: !docs.length, metadata: { fromCache: false } });
+        }),
+      }),
+    };
+  }
+  const browserDownloads = { save: async ({ filename, data }) => {
+    const url = URL.createObjectURL(new Blob([data], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a"); a.href = url; a.download = filename; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    return { status: "saved" };
+  } };
+  (async () => {
+    DB = localDB(); DOWNLOADS = browserDownloads; UID = "demo"; CAN_EDIT = true;
+
+    // Own tickets
+    DB.doc("regs/" + UID).onSnapshot(s => renderMine(s.exists && Array.isArray(s.data().entries) ? s.data().entries : []), () => {});
+
+    // Organizers
+    if (CAN_EDIT) {
+      $("tab-organizers").hidden = false; route();
+      const timer = setTimeout(() => { if (!LIVE) setStatus(orgStatus, "info", "Can't reach the register yet. Numbers may be out of date."); }, 10000);
+      DB.collection("regs").onSnapshot(snap => {
+        if (!snap.metadata.fromCache) { LIVE = true; clearTimeout(timer); if (orgStatus.classList.contains("info")) setStatus(orgStatus, "", ""); }
+        ALL = snap.docs.flatMap(d => (d.data().entries || []).map(x => ({...x, owner: d.id})));
+        renderOrg();
+      }, e => { clearTimeout(timer); setStatus(orgStatus, "error", errMsg(e)); });
+    }
+  })();
+})();
+</script>
